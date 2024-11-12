@@ -91,8 +91,11 @@ class Magic(Hero):
         super().__init__(name, health, damage, 'BOOST')
 
     def apply_super_power(self, boss, heroes):
-        pass
-        # TODO Here will be implementation of BOOSTING
+        # Увеличивает атаку каждого героя на 5 единиц
+        for hero in heroes:
+            if hero.health > 0:
+                hero.damage += 5
+        print(f"Magic {self.name} boosted heroes' damage.")
 
 
 class Berserk(Hero):
@@ -122,6 +125,59 @@ class Medic(Hero):
         for hero in heroes:
             if hero.health > 0 and self != hero:
                 hero.health += self.__heal_points
+
+
+class Witcher(Hero):
+    def __init__(self, name, health, damage):
+        super().__init__(name, health, damage, 'REVIVE')
+
+    def apply_super_power(self, boss, heroes):
+        for hero in heroes:
+            if hero.health == 0:  # Оживляет первого умершего героя
+                hero.health = self.health
+                self.health = 0  # Witcher отдает свою жизнь
+                print(f'Witcher {self.name} revived {hero.name} and died.')
+                break
+
+
+class Hacker(Hero):
+    def __init__(self, name, health, damage):
+        super().__init__(name, health, damage, 'STEAL_HEALTH')
+        self.__round_counter = 0
+
+    def apply_super_power(self, boss, heroes):
+        # Через раунд забирает здоровье у босса и передает случайному герою
+        self.__round_counter += 1
+        if self.__round_counter % 2 == 0:
+            stolen_health = 30
+            boss.health -= stolen_health
+            target_hero = choice(heroes)
+            target_hero.health += stolen_health
+            print(f'Hacker {self.name} stole {stolen_health} health from boss and gave to {target_hero.name}.')
+
+
+class Golem(Hero):
+    def __init__(self, name, health, damage):
+        super().__init__(name, health, damage, 'SHIELD')
+        self.health *= 2  # Увеличенная жизнь
+
+    def apply_super_power(self, boss, heroes):
+        shared_damage = boss.damage // 5
+        for hero in heroes:
+            if hero != self and hero.health > 0:
+                hero.health += shared_damage  # Golem принимает 1/5 часть урона от босса
+                self.health -= shared_damage
+        print(f'Golem {self.name} protected teammates by absorbing part of the damage.')
+
+
+class Thor(Hero):
+    def __init__(self, name, health, damage):
+        super().__init__(name, health, damage, 'STUN')
+
+    def apply_super_power(self, boss, heroes):
+        if randint(0, 1):  # 50% шанс оглушить босса
+            boss.damage = 0
+            print(f'Thor {self.name} stunned the boss for this round!')
 
 
 round_number = 0
@@ -169,7 +225,12 @@ def start_game():
     berserk = Berserk(name='Guts', health=260, damage=5)
     doc = Medic(name='Aibolit', health=250, damage=5, heal_points=15)
     assistant = Medic(name='Kristin', health=300, damage=5, heal_points=5)
-    heroes_list = [warrior_1, doc, warrior_2, magic, berserk, assistant]
+    witcher = Witcher(name='Geralt', health=200, damage=0)
+    hacker = Hacker(name='Neo', health=220, damage=5)
+    golem = Golem(name='Rocky', health=400, damage=5)
+    thor = Thor(name='Thor', health=260, damage=20)
+
+    heroes_list = [warrior_1, doc, warrior_2, magic, berserk, assistant, witcher, hacker, golem, thor]
 
     show_statistics(boss, heroes_list)
     while not is_game_over(boss, heroes_list):
